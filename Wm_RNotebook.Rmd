@@ -21,9 +21,9 @@ Steven took care of this through his python script:
 
 Now, we need to answer the questions respectively 
 ```{r}
-  # NBA_Data <- NBA_Steven
-  # NBA_Data$exp_Sqrd = NBA_Data$exp ^ 2
-  # NBA_Data$salary_Log = log ( NBA_Data$salary )
+  NBA_Data <- NBA_Steven
+  NBA_Data$exp_Sqrd = NBA_Data$exp ^ 2
+  NBA_Data$salary_Log = log ( NBA_Data$salary )
   StevenForrester_Model <-
     lm( NBA_Data$salary_Log ~
           NBA_Data$team + NBA_Data$minutes_played + NBA_Data$defensive_rebound_percentage +
@@ -39,12 +39,12 @@ Now, we need to answer the questions respectively
 ```
 
 ```{r}
-# NBA_Subgroup <-
-#   subset(
-#       NBA_Data,
-#       index == 1373 | index == 1313 |index == 598 |index == 4359 |index == 1382 |index == 3488 | index == 2113 |index == 5131
-#   )
-# 
+NBA_Subgroup <-
+  subset(
+      NBA_Data,
+      index == 1373 | index == 1313 |index == 598 |index == 4359 |index == 1382 |index == 3488 | index == 2113 |index == 5131
+  )
+
 NBA_Subgroup$AbsDelta <- abs( NBA_Subgroup$SalaryPredict - NBA_Subgroup$salary_Log )
 NBA_Subgroup$PercentChange <- ( NBA_Subgroup$AbsDelta / NBA_Subgroup$salary_Log )
 
@@ -61,28 +61,30 @@ data.frame(
 
 ##DO NOT RUN THIS CODE!
   #COEFFICIENTS 
-    # NBA_Graph_Coeff <- lm( NBA_Subgroup$SalaryPredict ~ NBA_Subgroup$salary_Log)
+    NBA_Graph_Coeff <- lm( NBA_Data$SalaryPredict ~ NBA_Data$salary_Log)
     # summary(NBA_Graph_Coeff)
-  #REGRESSION LINES
-    # geom_abline(
-    #   intercept = NBA_Graph_Coeff$coefficients[1] ,
-    #   slope = NBA_Graph_Coeff$coefficients[2]
-    # ) 
+
 
   ggplot(
     NBA_Subgroup,
     aes(NBA_Subgroup$salary_Log, NBA_Subgroup$SalaryPredict )  
   ) + 
   geom_point(size=2) +
-  geom_smooth(method=lm, se=TRUE ) + 
+  #REGRESSION LINES
+    geom_abline(
+      intercept = NBA_Graph_Coeff$coefficients[1] ,
+      slope = NBA_Graph_Coeff$coefficients[2]
+    )
+    # REGRESSION LINE - OPTION TWO
+    # geom_smooth(method=lm, se=TRUE ) + 
   #FORMULA
-  stat_poly_eq(
-    formula = y~x ,
-    aes( label = paste(..eq.label.. , ..rr.label.., sep = "~~~") ),
-    parse = TRUE
-  ) +
+    # stat_poly_eq(
+    #   formula = y~x ,
+    #   aes( label = paste(..eq.label.. , ..rr.label.., sep = "~~~") ),
+    #   parse = TRUE
+    # ) +
   #AXIS TITLES
-  xlab ( "Salary (log)" ) + ylab("Predicted Salary (log)")
+    # xlab ( "Salary (log)" ) + ylab("Predicted Salary (log)")
 
 ```
 
@@ -107,22 +109,33 @@ NBA_Subgroup$PercentChange_1 <- ( NBA_Subgroup$AbsDelta_1 / NBA_Subgroup$EXP_Sal
 # view(NBA_Subgroup)
 
 data.frame(
-  Avg_AbsDelta = mean( NBA_Subgroup[["AbsDelta"]] ) ,
-  Avg_PerChange = mean( NBA_Subgroup[["PercentChange"]] )
+  Avg_AbsDelta = mean( NBA_Subgroup[["AbsDelta_1"]] ) ,
+  Avg_PerChange = mean( NBA_Subgroup[["PercentChange_1"]] )
 )
 ```
 
 
 ```{r}
+
+
+  #COEFFICIENTS 
+    NBA_Graph_Coeff <- lm( NBA_Data$SalaryPredict ~ NBA_Data$salary_Log)
+
+
   ggplot(
     NBA_Subgroup,
     aes(NBA_Subgroup$EXP_Sal, NBA_Subgroup$EXP_Sal_Pred )  
   ) + 
   geom_point(size=2) +
-  geom_smooth(method=lm, se=TRUE ) + 
+  # geom_smooth(method=lm, se=TRUE ) + 
+  #REGRESSION LINES
+    geom_abline(
+      intercept = NBA_Graph_Coeff$coefficients[1] ,
+      slope = NBA_Graph_Coeff$coefficients[2]
+    ) + 
   #FORMULA
   stat_poly_eq(
-    formula = y~x ,
+    formula = NBA_Graph_Coeff , #y~x ,
     aes( label = paste(..eq.label.. , ..rr.label.., sep = "~~~") ),
     parse = TRUE
   ) +
