@@ -1,0 +1,149 @@
+---
+title: "Wm_ProjectDeliverable"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(stargazer)
+library(dplyr)
+```
+
+----------------------------------------------------------------------
+PROJECT WORK
+----------------------------------------------------------------------
+
+```{r}
+WmDataSet <- ss14pusa
+
+WmDataSet
+
+WmDataSet$PK_FamilyMember <- WmDataSet$SERIALNO & WmDataSet$SPORDER
+
+# summary(WmDataSet)
+str(WmDataSet)
+
+# ggplot (WmDataSet , aes (x = AGEP)) + geom_histogram(bins = 24 , color = 'black', fill = 'white' )
+
+
+##This part quantified disabled/typical children, then categorized families by the children type
+DisabledChildren <-
+  filter(
+    WmDataSet ,
+    AGEP <= 18 &
+    ( DEAR == 1 | DEYE == 1 | DREM == 1 )
+  )
+
+Distinct_DisabledChildren <- distinct( DisabledChildren , SERIALNO)
+Distinct_DisabledChildren$DisabledChild <- 1
+
+WmDataSet_1 <- left_join( x= WmDataSet , y = Distinct_DisabledChildren , by = "SERIALNO" )
+
+Children <-
+  filter(
+    WmDataSet ,
+    AGEP <= 18
+  )
+
+Distinct_Children <- distinct( Children , SERIALNO)
+Distinct_Children$StandardChild <- 1
+
+WmDataSet_1 <- left_join( x= WmDataSet_1 , y = Distinct_Children , by = "SERIALNO" )
+
+WmDataSet_2 <- 
+  filter ( 
+      WmDataSet_1 , 
+      DisabledChild == 1 | StandardChild == 1
+      )
+
+##WmDataSet_2 is now showing only families with children and has disabled children identified
+
+WmDataSet_2$Salary <- log ( (WmDataSet_2$WAGP + 1) ) 
+
+WmDataSet_3 <- 
+      filter(
+          WmDataSet_2 , 
+          SCHL >= 1 & SCHL != "bb" & AGEP > 18 & Salary > 1 
+      )
+
+# WmDataSet_3$DisabledChild[(WmDataSet_3$DisabledChild == "NA" )] <- 0
+WmDataSet_3$DisabledChild <- ifelse( is.na(WmDataSet_3$DisabledChild) , 0  , 1 )
+# WmDataSet_3$DisabledChild <- ifelse( WmDataSet_3$DisabledChild == 1  , 1  , 0 )
+
+
+# WmDataSet_3$DisabledChild_1 <- WmDataSet_3$DisabledChild + 1
+
+str( WmDataSet_3$DisabledChild)
+
+DC_Count <- WmDataSet_3 %>% group_by(DisabledChild) %>% tally()
+DC_Count
+
+
+
+
+ggplot (WmDataSet_3 , aes (x = DisabledChild)) + geom_histogram(bins = 24 , color = 'black', fill = 'white' )
+
+  
+# NewD$EXP <- (NewD$AGEP - NewD$EDUC - 5)
+# ggplot (NewD , aes (x = EXP)) + geom_histogram(bins = 24 , color = 'black', fill = 'white' )
+```
+
+```{r}
+WmDataSet_3$EDUC <- ifelse( WmDataSet_3$SCHL >= 4 & WmDataSet_3$SCHL < 14 , WmDataSet_3$SCHL -3  , 12)
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==15)] <- 11.5
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==16)] <- 12
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==17)] <- 11.75
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==18)] <- 12.5
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==19)] <- 13
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==20)] <- 14
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==21)] <- 16.5
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==22)] <- 18
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==23)] <- 19.5
+WmDataSet_3$EDUC[(WmDataSet_3$SCHL ==24)] <- 23
+ggplot (WmDataSet_3 , aes (x = EDUC)) + geom_histogram(bins = 24) 
+```
+
+```{r}
+WmDataSet_3$EXP <- WmDataSet_3$AGEP - WmDataSet_3$EDUC - 5
+WmDataSet_3$EXP_Squared <- WmDataSet_3$EXP ^2
+
+Project <- WmDataSet_3
+
+
+LM_1 <- 
+  lm ( 
+    Project$Salary ~ 
+      Project$EXP + Project$EXP_Squared + Project$SEX + Project$RAC1P + Project$MAR, 
+    data = Project
+    )
+
+LM_2 <- 
+  lm ( 
+    Project$Salary ~ 
+      Project$EXP + Project$EXP_Squared + Project$SEX + Project$RAC1P + Project$MAR + Project$DisabledChild ,
+    data = Project
+    )
+
+# str(Project$DisabledChild)
+
+stargazer(LM_1, LM_2 , type = "text" )
+
+# ggplot (Project , aes (x = Salary)) + geom_histogram(bins = 24) 
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
